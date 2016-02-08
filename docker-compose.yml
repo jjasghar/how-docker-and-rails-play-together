@@ -1,0 +1,34 @@
+# we'll call our web app of web
+web:
+  # it'll build this container based the docker file ./Dockerfile
+  build: .
+  # it'll run this command to star the server
+  command: bash -c "rm -f tmp/pids/server.pid || true && bundle exec rails s -p 3000 -b '0.0.0.0'"
+  # it'll export the port 3000
+  ports:
+    - "3000:3000"
+  # it links to db container (on mongoid.yaml at rail's config we say host: db:27017 it's linked)
+  links:
+    - db
+# we called our db container of db :)
+db:
+  # instead of building it from zero we'll use an existent image (see docker hub)
+  image: mongo
+  # it needs to persist data so we keep it (even if we "kill" the container)
+  volumes:
+    - /data/db
+  # we export the port 27017 :B
+  ports:
+    - "27017:27017"
+# we'll use nginx as web server
+nginx:
+  # it'll restart when the container does too
+  restart: always
+  # we're going to build this container from docker file ./docker/nginx/Dockerfile
+  build: ./docker/nginx/
+  # we're gonna expose 80
+  ports:
+    - "80:80"
+  # since we'll be a proxy we need to be linked to our web app (upstream= web:3000)
+  links:
+    - web:web
